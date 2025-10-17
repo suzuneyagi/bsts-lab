@@ -45,6 +45,14 @@ public class BinarySearchTree<T extends Comparable<? super T>> {
         root = null;
     }
 
+
+    /**
+     * Constructs a new binary search tree with val.
+     */
+    public BinarySearchTree(Node<T> val) {
+        root = val;
+    }
+
     /**
      * @param node the root of the tree
      * @return the number of elements in the specified tree
@@ -68,7 +76,25 @@ public class BinarySearchTree<T extends Comparable<? super T>> {
      * @param value the value to add to the tree
      */
     public void insert(T value) {
-        throw new UnsupportedOperationException();
+        if (root == null) {
+            root = new Node<T>(value);
+        } else if (value.compareTo(root.value) < 0) {
+            insertHelper(value, root.left);
+        } else {
+            insertHelper(value, root.right);
+        }
+    }
+
+    public void insertHelper(T value, Node<T> node) {
+        if (node == null) {
+            node = new Node<T>(value);
+        } else if (value.compareTo(node.value) < 0) {
+            BinarySearchTree<T> left = new BinarySearchTree<T>(node.left);
+            insertHelper(value, node.left);
+        } else {
+            BinarySearchTree<T> right = new BinarySearchTree<T>(node.right);
+            insertHelper(value, node.right);
+        }
     }
 
     ///// Part 1: Contains
@@ -78,7 +104,19 @@ public class BinarySearchTree<T extends Comparable<? super T>> {
      * @return true iff this tree contains <code>v</code>
      */
     public boolean contains(T v) {
-        throw new UnsupportedOperationException();
+        BinarySearchTree<T> left = new BinarySearchTree<T>(root.left);
+        BinarySearchTree<T> right = new BinarySearchTree<T>(root.right);
+        if(root == null){
+            return false;
+        } else if(v.compareTo(root.value) == 0){
+            return true;
+        } else if(v.compareTo(root.value) > 0){
+            return right.contains(v);
+        } else if(v.compareTo(root.value) < 0){
+            return left.contains(v);
+        } else{
+            return false;
+        }
     }
 
     ///// Part 2: Ordered Traversals
