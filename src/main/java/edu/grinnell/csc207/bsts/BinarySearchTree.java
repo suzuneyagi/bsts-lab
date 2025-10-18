@@ -1,5 +1,6 @@
 package edu.grinnell.csc207.bsts;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -76,24 +77,19 @@ public class BinarySearchTree<T extends Comparable<? super T>> {
      * @param value the value to add to the tree
      */
     public void insert(T value) {
-        if (root == null) {
-            root = new Node<T>(value);
-        } else if (value.compareTo(root.value) < 0) {
-            insertHelper(value, root.left);
-        } else {
-            insertHelper(value, root.right);
-        }
+        root = insertHelper(value, root);
     }
 
-    public void insertHelper(T value, Node<T> node) {
+    public Node<T> insertHelper(T value, Node<T> node) {
         if (node == null) {
-            node = new Node<T>(value);
-        } else if (value.compareTo(node.value) < 0) {
-            BinarySearchTree<T> left = new BinarySearchTree<T>(node.left);
-            insertHelper(value, node.left);
+            return new Node<T>(value);
         } else {
-            BinarySearchTree<T> right = new BinarySearchTree<T>(node.right);
-            insertHelper(value, node.right);
+            if (value.compareTo(node.value) < 0) {
+                node.left = insertHelper(value, node.left);
+            } else {
+                node.right = insertHelper(value, node.right);
+            }
+            return node;
         }
     }
 
@@ -104,16 +100,18 @@ public class BinarySearchTree<T extends Comparable<? super T>> {
      * @return true iff this tree contains <code>v</code>
      */
     public boolean contains(T v) {
-        BinarySearchTree<T> left = new BinarySearchTree<T>(root.left);
-        BinarySearchTree<T> right = new BinarySearchTree<T>(root.right);
-        if(root == null){
+        return containsHelper(v, root);
+    }
+
+    public boolean containsHelper (T v, Node<T> node) {
+        if(node == null){
             return false;
-        } else if(v.compareTo(root.value) == 0){
+        } else if(v.compareTo(node.value) == 0){
             return true;
-        } else if(v.compareTo(root.value) > 0){
-            return right.contains(v);
-        } else if(v.compareTo(root.value) < 0){
-            return left.contains(v);
+        } else if(v.compareTo(node.value) > 0){
+            return containsHelper(v, node.right);
+        } else if(v.compareTo(node.value) < 0){
+            return containsHelper(v, node.left);
         } else{
             return false;
         }
@@ -121,19 +119,40 @@ public class BinarySearchTree<T extends Comparable<? super T>> {
 
     ///// Part 2: Ordered Traversals
 
-    /**
+    // Codes ported from the previous lab
+    public void inOrderHelper(List<T> lst, Node<T> treeRoot){
+        if(treeRoot == null){
+            return;
+        } else if(treeRoot.left == null && treeRoot.right != null){
+            lst.add(treeRoot.value);
+            inOrderHelper(lst, treeRoot.right);
+        }else if(treeRoot.right ==null && treeRoot.left != null){
+            inOrderHelper(lst, treeRoot.left);
+            lst.add(treeRoot.value); 
+        }else{
+            inOrderHelper(lst, treeRoot.left);
+            lst.add(treeRoot.value);
+            inOrderHelper(lst, treeRoot.right);
+        }
+    }
+
+     /**
      * @return the (linearized) string representation of this BST
      */
     @Override
     public String toString() {
-        throw new UnsupportedOperationException();
+        List<T> treeElements = new ArrayList<T>(size());
+        inOrderHelper(treeElements, root);
+        return treeElements.toString();
     }
 
     /**
      * @return a list contains the elements of this BST in-order.
      */
     public List<T> toList() {
-        throw new UnsupportedOperationException();
+        List<T> treeElements = new ArrayList<T>(size());
+        inOrderHelper(treeElements, root);
+        return treeElements;
     }
 
     ///// Part 3: BST Sorting
@@ -143,18 +162,27 @@ public class BinarySearchTree<T extends Comparable<? super T>> {
      * @param lst the list to sort
      * @return a copy of <code>lst</code> but sorted
      * @implSpec <code>sort</code> runs in ___ time if the tree remains balanced. 
+     * 
+     * Complexity analysis:
+     *  isnertion: O(n log n)
+     *  toList (in-order traversal): O(n)
+     * -> O(n log n)
      */
     public static <T extends Comparable<? super T>> List<T> sort(List<T> lst) {
-        throw new UnsupportedOperationException();
+        BinarySearchTree<T> tree = new BinarySearchTree<T>();
+        for (int i = 0; i < lst.size(); i++) {
+            tree.insert(lst.get(i));
+        }
+        return tree.toList();
     }
 
     ///// Part 4: Deletion
   
     /*
      * The three cases of deletion are:
-     * 1. (TODO: fill me in!)
-     * 2. (TODO: fill me in!)
-     * 3. (TOOD: fill me in!)
+     * 1. When the node doesn't have neither left nor right, delete it and make the root's pointer to null
+     * 2. When the node only has either left or right, replace the deleted node with its single child.
+     * 3. When the node has both left and right
      */
 
     /**
@@ -164,6 +192,34 @@ public class BinarySearchTree<T extends Comparable<? super T>> {
      * @param value the value to delete
      */
     public void delete(T value) {
-        throw new UnsupportedOperationException();
+        root = deleteHelper(value, root);
+    }
+
+    public Node<T> deleteHelper(T value, Node<T> node) {
+        if (node == null) {
+            return null;
+        }
+        if (value.compareTo(node.value) < 0) {
+            node.left = deleteHelper(value, node.left);
+        } else if (value.compareTo(node.value) > 0) {
+            node.right = deleteHelper(value, node.right);
+        } else {
+            // case 1
+            if (node.left == null && node.right == null) {
+                return null;
+            } else if (node.left == null) {
+                return node.right;
+            } else if (node.right == null) {
+                return node.left;
+            } else {
+                Node<T> nextRoot = node.right;
+                while (nextRoot.left != null) {
+                    nextRoot = nextRoot.left;
+                }
+                node.value = nextRoot.value;
+                node.right = deleteHelper(nextRoot.value, node.right);
+            }
+        }
+        return node;
     }
 }
